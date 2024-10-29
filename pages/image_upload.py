@@ -2,8 +2,8 @@ import streamlit as st
 
 import io
 from PIL import Image
-import apis.aws_api
-import apis.dify_api
+import apis.aws_api as aws_api
+import apis.dify_api as dify_api
 
 from botocore.exceptions import NoCredentialsError
 
