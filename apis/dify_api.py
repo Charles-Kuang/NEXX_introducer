@@ -1,6 +1,9 @@
 import requests
 import json
 
+import subprocess
+import os
+
 # Define the API endpoint
 def introducer_response(input_query, conversation_id="", memory=True):
     url = 'https://api.dify.ai/v1/chat-messages'
@@ -70,6 +73,58 @@ def image_upload(image_url, image_description, answer='', keywords=[]):
         return response.status_code, ""
     else:
         return response.status_code, response.json()['code'] + ': ' + response.json()['message']
+
+def text_upload(file, text_url):
+    dataset_id = 'fea03902-9c1b-490a-8f70-5abedca8e3ef'
+    api_key = 'dataset-R6uN5v8TUK0WlwSdeYY7Hbrw'
+
+    url = f'https://api.dify.ai/v1/datasets/{dataset_id}/document/create_by_file'
+    headers = {
+        'Authorization': f'Bearer {api_key}',
+    }
+
+    form_data = {
+        'data': '{"indexing_technique":"high_quality","process_rule":{"rules":{"pre_processing_rules":[{"id":"remove_extra_spaces","enabled":true},{"id":"remove_urls_emails","enabled":true}],"segmentation":{"separator":"###","max_tokens":500}},"mode":"custom"}}',
+    }
+
+    files={'file': text_url}
+    # Make the POST request
+    print(form_data)
+    response = requests.post(url, headers=headers, data=form_data, files=files)
+    print(response.json())
+    if response.status_code == 200:
+        return response.status_code, ""
+    else:
+        return response.status_code, response.json()['code'] + ': [' + response.json()['message'] + ']'
+
+def text_upload_subprocess(file, content_type):
+    temp_file_path = f'tmp/{file.name}'
+    dataset_id = 'fea03902-9c1b-490a-8f70-5abedca8e3ef'
+    api_key = 'dataset-R6uN5v8TUK0WlwSdeYY7Hbrw'
+        
+    with open(temp_file_path, 'wb') as f:
+        f.write(file.getbuffer())
+
+    curl_cmd = [
+        'curl', 
+        '--location',
+        '--request', 'POST',
+        f'https://api.dify.ai/v1/datasets/{dataset_id}/document/create_by_file',
+        '--header', f'Authorization: Bearer {api_key}',
+        '--form', 'data={"indexing_technique":"high_quality","process_rule":{"rules":{"pre_processing_rules":[{"id":"remove_extra_spaces","enabled":true},{"id":"remove_urls_emails","enabled":true}],"segmentation":{"separator":"###","max_tokens":500}},"mode":"custom"}};type='+str(content_type),
+        '--form', f'file=@{temp_file_path}'
+    ]
+    
+    response = subprocess.run(curl_cmd, capture_output=True, text=True)
+    
+    os.remove(temp_file_path)
+
+    # Optionally, print the response and any error message
+    
+    if response.returncode != 0:
+        return 1, response.std_err
+    else:
+        return 0, ""
 
 
 #cid = ""
