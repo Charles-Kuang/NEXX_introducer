@@ -87,8 +87,8 @@ if uploaded_file is not None:
     if st.button('Upload to S3'):
         # Upload the image as binary stream (BytesIO object) to S3        
         try:
-            #text_url = aws_api.upload_text_to_s3(uploaded_file, mime_type, aws_api.TEXT_BUCKET_NAME, aws_api.NEWS_FOLDER_NAME)
-            #st.success(f"File uploaded successfully to {aws_api.TEXT_BUCKET_NAME}")
+            text_url = aws_api.upload_text_to_s3(uploaded_file, mime_type, aws_api.TEXT_BUCKET_NAME, aws_api.NEWS_FOLDER_NAME)
+            st.success(f"File uploaded successfully to {aws_api.TEXT_BUCKET_NAME}")
             
             dify_code, dify_msg = dify_api.text_upload_subprocess(uploaded_file, mime_type)
             
