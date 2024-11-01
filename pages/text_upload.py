@@ -8,6 +8,7 @@ import mimetypes
 import fitz
 import pandas as pd
 from docx import Document
+from pptx import Presentation
 
 from botocore.exceptions import NoCredentialsError
 
@@ -42,17 +43,32 @@ def preview_csv(file):
     st.write("### CSV Content")
     st.dataframe(df, height=300)
 
+def preview_xlsx(file):
+    df = pd.read_excel(file)
+    st.write("### XLSX Content")
+    st.dataframe(df, height=300)
+
+def preview_pptx(file):
+    prs = Presentation(uploaded_file)
+    
+    first_slide = prs.slides[0]
+    
+    content = ""
+    for shape in first_slide.shapes:
+        if hasattr(shape, "text") and shape.text:
+            content += shape.text + '\n'
+    st.text_area("File Preview", value=content, height=300, disabled=True)
 
 # Streamlit UI
 st.title("Text Upload to AWS S3 Folder")
 
 # File upload widget
-uploaded_file = st.file_uploader("Choose an text file", type=["txt", "pdf", "docx", "csv"])
+uploaded_file = st.file_uploader("Choose an text file", type=["txt", "pdf", "docx", "csv", "xlsx", "pptx"])
 
 if uploaded_file is not None:
     # Get file format and name
     mime_type, _ = mimetypes.guess_type(uploaded_file.name)
-    #print(mime_type)
+    print(mime_type)
     if mime_type == 'text/plain':
         preview_txt(uploaded_file)
     elif mime_type == "application/pdf":
@@ -61,14 +77,18 @@ if uploaded_file is not None:
         preview_docx(uploaded_file)
     elif mime_type == "application/vnd.ms-excel":
         preview_csv(uploaded_file)
+    elif mime_type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+        preview_xlsx(uploaded_file)
+    elif mime_type == "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+        preview_pptx(uploaded_file)
     uploaded_file.seek(0)
 
     # Upload text file to S3 when button is clicked
     if st.button('Upload to S3'):
         # Upload the image as binary stream (BytesIO object) to S3        
         try:
-            text_url = aws_api.upload_text_to_s3(uploaded_file, mime_type, aws_api.IMAGE_BUCKET_NAME, aws_api.IMAGE_FOLDER_NAME)
-            st.success(f"File uploaded successfully to {aws_api.TEXT_BUCKET_NAME}")
+            #text_url = aws_api.upload_text_to_s3(uploaded_file, mime_type, aws_api.TEXT_BUCKET_NAME, aws_api.NEWS_FOLDER_NAME)
+            #st.success(f"File uploaded successfully to {aws_api.TEXT_BUCKET_NAME}")
             
             dify_code, dify_msg = dify_api.text_upload_subprocess(uploaded_file, mime_type)
             

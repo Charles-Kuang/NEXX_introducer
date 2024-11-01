@@ -3,6 +3,7 @@ import json
 
 import subprocess
 import os
+import re
 
 # Define the API endpoint
 def introducer_response(input_query, conversation_id="", memory=True):
@@ -112,17 +113,14 @@ def text_upload_subprocess(file, content_type):
         f'https://api.dify.ai/v1/datasets/{dataset_id}/document/create_by_file',
         '--header', f'Authorization: Bearer {api_key}',
         '--form', 'data={"indexing_technique":"high_quality","process_rule":{"rules":{"pre_processing_rules":[{"id":"remove_extra_spaces","enabled":true},{"id":"remove_urls_emails","enabled":true}],"segmentation":{"separator":"###","max_tokens":500}},"mode":"custom"}};type='+str(content_type),
-        '--form', f'file=@{temp_file_path}'
+        '--form', f'file=@"{temp_file_path}"'
     ]
     
     response = subprocess.run(curl_cmd, capture_output=True, text=True)
-    
     os.remove(temp_file_path)
 
-    # Optionally, print the response and any error message
-    
     if response.returncode != 0:
-        return 1, response.std_err
+        return 1, response.stderr
     else:
         return 0, ""
 

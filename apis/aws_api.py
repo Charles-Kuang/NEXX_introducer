@@ -21,11 +21,9 @@ s3_client = boto3.client(
 )
 
 def sanitize_filename(filename):
-    # Replace spaces with underscores
-    filename = filename.replace(" ", "_")
-    
-    # Remove all special characters except for allowed ones (like . and _)
-    filename = re.sub(r'[^A-Za-z0-9._-]', '', filename)
+    sanitized_filename = re.sub(r'[\\/:"*?<>|]+', '', filename)  # Exclude invalid characters
+    if '.' in sanitized_filename:
+        sanitized_filename = sanitized_filename.rsplit('.', 1)[0] + '.' + sanitized_filename.split('.')[-1]
     
     return filename
 
